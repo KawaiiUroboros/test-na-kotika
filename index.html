@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Which Cat Are You?</title>
+  <title>Which Cat Are You? (Plain JS + React)</title>
 
-  <!-- 1) Recorder CSS (SCSS-like) -->
+  <!-- 1) Recorder CSS -->
   <style>
     * {
       border: 0;
@@ -185,7 +185,7 @@
     }
   </style>
 
-  <!-- 2) Form CSS (SCSS-like) -->
+  <!-- 2) Form CSS -->
   <style>
     .poll-container {
       display: none;
@@ -437,7 +437,7 @@
     }
   </style>
 
-  <!-- 3) Hamster CSS (SCSS-like) + layout for final result -->
+  <!-- 3) Hamster CSS (plus final result) -->
   <style>
     .hamster-section {
       display: none;
@@ -453,7 +453,6 @@
       font-size: 1.2rem;
       margin-top: 2rem;
     }
-    /* The hamster wrapper, wheel, etc. (from your snippet) */
     *[data-hamster] {
       box-sizing: border-box;
     }
@@ -675,14 +674,7 @@
 <!-- React mountpoint -->
 <div id="root"></div>
 
-<!--  Optional: You can place your images or references in your HTML if needed -->
-<!-- <img src="..." alt="Cat" style="display:none;" /> -->
-
 <script type="module">
-/*
-  We'll use React from ESM. Make sure to run this through a local server
-  (e.g., "npx serve") or an environment that supports ES modules in the browser.
-*/
 import React, { StrictMode, useEffect, useState } from "https://esm.sh/react";
 import { createRoot } from "https://esm.sh/react-dom/client";
 
@@ -692,7 +684,8 @@ import { createRoot } from "https://esm.sh/react-dom/client";
 // 3) Hamster spinner
 // 4) Final result
 function App() {
-  const [step, setStep] = useState<1|2|3|4>(1);
+  // Step control: 1|2|3|4 (just store as a number in JS)
+  const [step, setStep] = useState(1);
 
   // -------------- For RecordingToggle --------------
   const [recording, setRecording] = useState(false);
@@ -706,8 +699,8 @@ function App() {
 
   function timeFormatted() {
     const timeToDisplay = recording ? time : timeStopped;
-    const minutes = `0${Math.floor(timeToDisplay / 60)}`.slice(-2);
-    const seconds = `0${timeToDisplay % 60}`.slice(-2);
+    const minutes = ("0" + Math.floor(timeToDisplay / 60)).slice(-2);
+    const seconds = ("0" + (timeToDisplay % 60)).slice(-2);
     return `${minutes}:${seconds}`;
   }
 
@@ -736,17 +729,16 @@ function App() {
   useEffect(() => {
     if (time >= timeMax) {
       setRecording(false);
-      // after it stops, go to next step?
-      // But the user only said "Then after button was pressed". So let's do it on toggle below
     }
   }, [time]);
 
   // This function toggles recording. Once the user stops, we move to step 2.
   function toggleRecording() {
-    setRecording(!recording);
-    if(recording === true) {
+    const newState = !recording;
+    setRecording(newState);
+    if (recording === true) {
       // if we are currently recording, and user clicks => we end
-      setStep(2); 
+      setStep(2);
     }
   }
 
@@ -758,17 +750,18 @@ function App() {
     milyi: false,
     dobryi: false,
     obayatelnyi: false,
-    radio: '' // 'kisochka' | 'chmo' | 'posmotrim'
+    radio: "" // 'kisochka' | 'chmo' | 'posmotrim'
   });
 
-  const handleCheckbox = (key: 'milyi'|'dobryi'|'obayatelnyi') => {
+  function handleCheckbox(key) {
     setAnswers((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
-  const handleRadio = (value: string) => {
-    setAnswers((prev) => ({ ...prev, radio: value }));
-  };
+  }
 
-  function onSubmitQuestionnaire(e: React.FormEvent) {
+  function handleRadio(value) {
+    setAnswers((prev) => ({ ...prev, radio: value }));
+  }
+
+  function onSubmitQuestionnaire(e) {
     e.preventDefault();
     setStep(3);
   }
@@ -781,19 +774,18 @@ function App() {
   const [hamsterRunning, setHamsterRunning] = useState(true);
   const [wheelSpinning, setWheelSpinning] = useState(false);
 
-  // set initial CSS variables
+  function updateHamsterSpeed(factor) {
+    const wrapper = document.querySelector(".wrapper");
+    if (wrapper) {
+      wrapper.style.setProperty("--hamster-speed", `${1 / factor}s`);
+      wrapper.style.setProperty("--wheel-speed", `${2 / factor}s`);
+      wrapper.style.setProperty("--wheel-angle", `${0.4 * factor}deg`);
+    }
+  }
+
   useEffect(() => {
     updateHamsterSpeed(speedFactor);
   }, []);
-
-  function updateHamsterSpeed(factor: number) {
-    const wrapper = document.querySelector('.wrapper') as HTMLElement;
-    if(wrapper) {
-      wrapper.style.setProperty('--hamster-speed', `${1 / factor}s`);
-      wrapper.style.setProperty('--wheel-speed', `${2 / factor}s`);
-      wrapper.style.setProperty('--wheel-angle', `${0.4 * factor}deg`);
-    }
-  }
 
   useEffect(() => {
     updateHamsterSpeed(speedFactor);
@@ -802,15 +794,15 @@ function App() {
   // "energy drain" loop
   useEffect(() => {
     const intervalId = setInterval(() => {
-      if(hamsterRunning) {
-        setHamsterEnergy((en) => en - speedFactor*speedFactor);
+      if (hamsterRunning) {
+        setHamsterEnergy((en) => en - speedFactor * speedFactor);
       }
     }, 500);
     return () => clearInterval(intervalId);
   }, [speedFactor, hamsterRunning]);
 
   useEffect(() => {
-    if(hamsterRunning && hamsterEnergy < 0) {
+    if (hamsterRunning && hamsterEnergy < 0) {
       // hamster collapses => wheel spins itself for 6s
       setHamsterRunning(false);
       setWheelSpinning(true);
@@ -833,27 +825,27 @@ function App() {
   // hamster => if speedFactor > 5 => +1
   // Then pick a cat image & text based on points
   const [finalPoints, setFinalPoints] = useState(0);
-  const [catImage, setCatImage] = useState('');
-  const [catText, setCatText] = useState('');
+  const [catImage, setCatImage] = useState("");
+  const [catText, setCatText] = useState("");
 
   useEffect(() => {
-    if(step === 4) {
+    if (step === 4) {
       let points = 0;
-      if(answers.milyi) points++;
-      if(answers.dobryi) points++;
-      if(answers.obayatelnyi) points++;
-      if(answers.radio === 'kisochka') points++;
-      if(answers.radio === 'chmo') points--;
-      if(answers.radio === 'posmotrim') points++;
-      if(speedFactor > 5) points++;
+      if (answers.milyi) points++;
+      if (answers.dobryi) points++;
+      if (answers.obayatelnyi) points++;
+      if (answers.radio === "kisochka") points++;
+      if (answers.radio === "chmo") points--;
+      if (answers.radio === "posmotrim") points++;
+      if (speedFactor > 5) points++;
 
       setFinalPoints(points);
 
       // Let’s do some simple branching:
-      if(points < 0) {
+      if (points < 0) {
         setCatImage("https://i.redd.it/i-keep-seeing-this-angry-cat-meme-does-anyone-know-what-v0-0o96ygkg9jw91.jpg?width=1080&format=pjpg&auto=webp&s=8a7220f58ae5e5ecbef518367d48b96f7327e06d");
         setCatText("Ты слегка зловредный котик! Пушисто злишься и шипишь на всех вокруг!");
-      } else if(points <= 2) {
+      } else if (points <= 2) {
         setCatImage("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdBWB76EZKUgHdARYa-XNyIzoiJiUiyKiFrg&s");
         setCatText("Ты серьёзный, но справедливый кот. Держишь дистанцию, но в душе добряк.");
       } else {
@@ -929,7 +921,7 @@ function App() {
                   className="checkbox__input"
                   type="checkbox"
                   checked={answers.milyi}
-                  onChange={() => handleCheckbox('milyi')}
+                  onChange={() => handleCheckbox("milyi")}
                 />
                 <span className="checkbox__label">милый</span>
               </label>
@@ -938,7 +930,7 @@ function App() {
                   className="checkbox__input"
                   type="checkbox"
                   checked={answers.dobryi}
-                  onChange={() => handleCheckbox('dobryi')}
+                  onChange={() => handleCheckbox("dobryi")}
                 />
                 <span className="checkbox__label">добрый</span>
               </label>
@@ -947,7 +939,7 @@ function App() {
                   className="checkbox__input"
                   type="checkbox"
                   checked={answers.obayatelnyi}
-                  onChange={() => handleCheckbox('obayatelnyi')}
+                  onChange={() => handleCheckbox("obayatelnyi")}
                 />
                 <span className="checkbox__label">обаятельный</span>
               </label>
@@ -959,8 +951,8 @@ function App() {
                   className="radio__input"
                   type="radio"
                   name="dummy2"
-                  checked={answers.radio === 'kisochka'}
-                  onChange={() => handleRadio('kisochka')}
+                  checked={answers.radio === "kisochka"}
+                  onChange={() => handleRadio("kisochka")}
                 />
                 <span className="radio__label">кисочка</span>
               </label>
@@ -969,8 +961,8 @@ function App() {
                   className="radio__input"
                   type="radio"
                   name="dummy2"
-                  checked={answers.radio === 'chmo'}
-                  onChange={() => handleRadio('chmo')}
+                  checked={answers.radio === "chmo"}
+                  onChange={() => handleRadio("chmo")}
                 />
                 <span className="radio__label">чьмо</span>
               </label>
@@ -979,22 +971,25 @@ function App() {
                   className="radio__input"
                   type="radio"
                   name="dummy2"
-                  checked={answers.radio === 'posmotrim'}
-                  onChange={() => handleRadio('posmotrim')}
+                  checked={answers.radio === "posmotrim"}
+                  onChange={() => handleRadio("posmotrim")}
                 />
                 <span className="radio__label">посмотрим</span>
               </label>
             </div>
 
-            <button type="submit" style={{
-              marginTop: "1rem",
-              padding: "0.75rem 1.5rem",
-              borderRadius: "0.5rem",
-              backgroundColor: "var(--primary3)",
-              color: "white",
-              border: "none",
-              cursor: "pointer",
-            }}>
+            <button
+              type="submit"
+              style={{
+                marginTop: "1rem",
+                padding: "0.75rem 1.5rem",
+                borderRadius: "0.5rem",
+                backgroundColor: "var(--primary3)",
+                color: "white",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
               Next
             </button>
           </form>
@@ -1008,7 +1003,7 @@ function App() {
             раскрутите хомячка по своему усмотрению
           </div>
           <div className="wrapper active" data-hamster>
-            <div className={`wheel ${wheelSpinning ? 'spinning' : ''}`}>
+            <div className={`wheel ${wheelSpinning ? "spinning" : ""}`}>
               <div className="wheel-support pix"></div>
               <div className="hamster puff pix">
                 <div className="ear pix"></div>
@@ -1025,8 +1020,8 @@ function App() {
               onChange={(e) => setSpeedFactor(Number(e.target.value))}
             />
           </div>
-          <div className="sign active">
-            by masahito / <a href="http://www.ma5a.com/">ma5a.com</a>
+          <div className={`sign ${true ? "active" : ""}`}>
+            by masahito / <a href="http://www.ma5a.com/" >ma5a.com</a>
           </div>
           <div style={{textAlign: "center", marginTop: "2rem"}}>
             <button
