@@ -713,7 +713,7 @@ function App() {
 
   // timer loop
   useEffect(() => {
-    let frameId: any = 0;
+    let frameId = 0;
     if (recording) {
       setTimeStopped(0);
       const tick = () => {
