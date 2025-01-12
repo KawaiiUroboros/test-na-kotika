@@ -1,63 +1,1071 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Which Cat Are You?</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <title>Which Cat Are You?</title>
+
+  <!-- 1) Recorder CSS (SCSS-like) -->
+  <style>
+    * {
+      border: 0;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    :root {
+      --hue: 223;
+      --red: hsl(3,90%,50%);
+      --white: hsl(0,0%,100%);
+      --primary: hsl(var(--hue),90%,50%);
+      --primary-t: hsla(var(--hue),90%,50%,0);
+      --gray1: hsl(var(--hue),10%,90%);
+      --gray2: hsl(var(--hue),10%,80%);
+      --gray3: hsl(var(--hue),10%,70%);
+      --gray4: hsl(var(--hue),10%,60%);
+      --gray5: hsl(var(--hue),10%,50%);
+      --gray6: hsl(var(--hue),10%,40%);
+      --gray7: hsl(var(--hue),10%,30%);
+      --gray8: hsl(var(--hue),10%,20%);
+      --gray9: hsl(var(--hue),10%,10%);
+      --trans-dur: 0.3s;
+      --trans-timing: cubic-bezier(0.65,0,0.35,1);
+      font-size: calc(28px + (60 - 28) * (100vw - 320px) / (3840 - 320));
+    }
+    body,
+    button {
+      color: var(--gray9);
+      font: 1em/1.5 "DM Sans", sans-serif;
+      transition:
+        background-color var(--trans-dur),
+        color var(--trans-dur);
+    }
+    body {
+      background-color: var(--gray1);
+    }
+    .hidden {
+      display: none !important;
+    }
+    .recorder {
+      background-color: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      margin: auto;
+      outline: transparent;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      -webkit-appearance: none;
+      appearance: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .recorder__label {
+      &-start,
+      &-end {
+        display: block;
+        position: relative;
+      }
+      &-start,
+      &-end-text {
+        transition: opacity var(--trans-dur);
+      }
+      &-start {
+        margin-inline: 0 0.5em;
+      }
+      &-end {
+        margin-inline: 0.5em 0;
+      }
+      &-end-text {
+        opacity: 0.4;
+      }
+      &-end-text + &-end-text {
+        opacity: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    }
+    .recorder__switch {
+      background-color: var(--white);
+      border-radius: 0.75em;
+      box-shadow:
+        0 0 0 0.125em var(--primary-t),
+        0 0.25em 0.25em hsla(0,0%,0%,0.1);
+      display: flex;
+      padding: 0.25em;
+      width: 2.5em;
+      height: 1.5em;
+      transition:
+        background-color var(--trans-dur),
+        box-shadow var(--trans-dur),
+        transform var(--trans-dur) var(--trans-timing),
+        transform-origin var(--trans-dur) var(--trans-timing);
+    }
+    .recorder__switch-handle {
+      background-color: var(--gray3);
+      border-radius: 50%;
+      display: block;
+      transform-origin: 0 0.5em;
+      width: 1em;
+      height: 1em;
+      transition:
+        background-color var(--trans-dur),
+        box-shadow var(--trans-dur),
+        transform var(--trans-dur) var(--trans-timing),
+        transform-origin var(--trans-dur) var(--trans-timing);
+    }
+    .recorder__timer {
+      display: block;
+      overflow: visible;
+      width: 100%;
+      height: auto;
+    }
+    .recorder__timer-ring {
+      transition:
+        r var(--trans-dur) var(--trans-timing),
+        stroke-dasharray var(--trans-dur) var(--trans-timing),
+        stroke-dashoffset var(--trans-dur) var(--trans-timing),
+        stroke-width var(--trans-dur) var(--trans-timing);
+    }
+    .recorder:focus-visible .recorder__switch {
+      box-shadow:
+        0 0 0 0.125em var(--primary),
+        0 0.25em 0.25em hsla(0,0%,0%,0.1);
+    }
+    .recorder:active .recorder__switch-handle {
+      transform: scaleX(1.5);
+    }
+    /* Recording state */
+    .recorder[aria-pressed="true"] .recorder__label-start {
+      opacity: 0.4;
+    }
+    .recorder[aria-pressed="true"] .recorder__label-end-text {
+      opacity: 0;
+    }
+    .recorder[aria-pressed="true"] .recorder__label-end-text + .recorder__label-end-text {
+      opacity: 1;
+    }
+    .recorder[aria-pressed="true"] .recorder__switch-handle {
+      background-color: var(--red);
+      transform: translateX(100%);
+      transform-origin: 100% 0.5em;
+    }
+    .recorder[aria-pressed="true"] .recorder__timer-ring {
+      r: 6.5px;
+      stroke-width: 3px;
+    }
+    .recorder[aria-pressed="true"]:active .recorder__switch-handle {
+      transform: translateX(100%) scaleX(1.5);
+    }
+
+    /* Dark theme */
+    @media (prefers-color-scheme: dark) {
+      body,
+      button {
+        color: var(--gray1);
+      }
+      body {
+        background-color: var(--gray9);
+      }
+      .recorder__switch {
+        background-color: var(--gray8);
+        box-shadow:
+          0 0 0 0.125em var(--primary-t),
+          0 0.25em 0.25em hsla(0,0%,0%,0.2);
+      }
+      .recorder__switch-handle {
+        background-color: var(--gray6);
+      }
+      .recorder:focus-visible .recorder__switch {
+        box-shadow:
+          0 0 0 0.125em var(--primary),
+          0 0.25em 0.25em hsla(0,0%,0%,0.2);
+      }
+    }
+  </style>
+
+  <!-- 2) Form CSS (SCSS-like) -->
+  <style>
+    .poll-container {
+      display: none;
+      padding: 2rem;
+    }
+    .poll-container.active {
+      display: block;
+    }
+
+    *[data-pollstyles] {
+      border: 0;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    :root[data-pollstyles] {
+      --hue: 223;
+      --sat1: 10%;
+      --sat2: 90%;
+      --light-gray1: hsl(var(--hue),var(--sat1),95%);
+      --light-gray2: hsl(var(--hue),var(--sat1),90%);
+      --light-gray3: hsl(var(--hue),var(--sat1),85%);
+      --light-gray4: hsl(var(--hue),var(--sat1),80%);
+      --light-gray5: hsl(var(--hue),var(--sat1),75%);
+      --light-gray6: hsl(var(--hue),var(--sat1),70%);
+      --light-gray7: hsl(var(--hue),var(--sat1),65%);
+      --light-gray8: hsl(var(--hue),var(--sat1),60%);
+      --light-gray9: hsl(var(--hue),var(--sat1),55%);
+      --dark-gray1: hsl(var(--hue),var(--sat1),45%);
+      --dark-gray2: hsl(var(--hue),var(--sat1),40%);
+      --dark-gray3: hsl(var(--hue),var(--sat1),35%);
+      --dark-gray4: hsl(var(--hue),var(--sat1),30%);
+      --dark-gray5: hsl(var(--hue),var(--sat1),25%);
+      --dark-gray6: hsl(var(--hue),var(--sat1),20%);
+      --dark-gray7: hsl(var(--hue),var(--sat1),15%);
+      --dark-gray8: hsl(var(--hue),var(--sat1),10%);
+      --dark-gray9: hsl(var(--hue),var(--sat1),5%);
+      --primary1: hsl(var(--hue),var(--sat2),70%);
+      --primary2: hsl(var(--hue),var(--sat2),60%);
+      --primary3: hsl(var(--hue),var(--sat2),50%);
+      --primary4: hsl(var(--hue),var(--sat2),40%);
+      --primary5: hsl(var(--hue),var(--sat2),30%);
+      --trans-dur: 0.25s;
+      --ease-in-out: cubic-bezier(0.65,0,0.35,1.65);
+      font-size: clamp(1rem,0.95rem + 0.25vw,1.25rem);
+    }
+    [data-pollstyles] body,
+    [data-pollstyles] input {
+      color: var(--dark-gray9);
+      font: 1em/1.5 "DM Sans", sans-serif;
+      transition:
+        background-color var(--trans-dur),
+        color var(--trans-dur);
+    }
+    [data-pollstyles] body {
+      background-color: var(--light-gray2);
+      display: flex;
+      height: 100vh;
+    }
+    form {
+      display: grid;
+      gap: 3em;
+      margin: auto;
+      padding: 1.5em;
+      width: 100%;
+      max-width: 30em;
+    }
+    .input-group {
+      display: grid;
+      gap: 0.75em;
+    }
+    .checkbox,
+    .radio {
+      background-color: var(--light-gray3);
+      border-radius: 0.75em;
+      box-shadow:
+        0 0 0 0.0625em var(--light-gray5) inset,
+        0 0 0 var(--light-gray2) inset,
+        0 0 0 var(--light-gray3);
+      cursor: pointer;
+      display: flex;
+      gap: 0.75em;
+      align-items: center;
+      padding: 0.75em 1em;
+      position: relative;
+      min-width: 0;
+      transition:
+        background-color var(--trans-dur),
+        box-shadow var(--trans-dur),
+        transform var(--trans-dur) var(--ease-in-out);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .checkbox__input,
+    .radio__input {
+      transition:
+        background-color var(--trans-dur),
+        box-shadow var(--trans-dur),
+        transform var(--trans-dur) var(--ease-in-out);
+      -webkit-tap-highlight-color: transparent;
+      background-color: var(--light-gray1);
+      flex-shrink: 0;
+      width: 1.25em;
+      height: 1.25em;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .checkbox__label,
+    .radio__label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .checkbox:before,
+    .radio:before {
+      border-radius: inherit;
+      box-shadow: 0 0 0 0.125em var(--primary3);
+      content: "";
+      display: block;
+      opacity: 0;
+      position: absolute;
+      inset: 0;
+      transition: opacity var(--trans-dur);
+    }
+    .checkbox:hover,
+    .radio:hover {
+      background-color: var(--light-gray2);
+    }
+    .checkbox:has(.checkbox__input:checked),
+    .radio:has(.radio__input:checked) {
+      background-color: var(--light-gray1);
+      box-shadow:
+        0 0 0 0.0625em var(--light-gray5) inset,
+        0 -0.375em 0 var(--light-gray2) inset,
+        0 0.25em 0.25em var(--light-gray3);
+      transform: scale(1.02);
+    }
+    .checkbox:has(.checkbox__input:focus-visible),
+    .radio:has(.radio__input:focus-visible) {
+      &:before {
+        opacity: 1;
+      }
+    }
+    .checkbox__input {
+      border-radius: 0.25em;
+      box-shadow:
+        0 0 0 0.0625em var(--light-gray7) inset,
+        0 0.25em 0.25em var(--light-gray4) inset;
+      color: var(--light-gray1);
+    }
+    .checkbox__input:before {
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="%23fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><polyline points="4 8,7 11,12 5" /></svg>') 0 0 / 100% auto;
+      content: "";
+      display: block;
+      opacity: 0;
+      transition: opacity var(--trans-dur);
+      width: 100%;
+      height: 100%;
+    }
+    .checkbox__input:checked {
+      background-color: var(--primary3);
+      box-shadow:
+        0 0 0 0.0625em var(--primary4) inset,
+        0 0.125em 0.25em var(--primary2) inset;
+    }
+    .checkbox__input:checked:before {
+      opacity: 1;
+    }
+    .radio__input {
+      border-radius: 50%;
+      box-shadow:
+        0 0 0 0.0625em var(--light-gray7) inset,
+        0 0 0 0 var(--primary3) inset,
+        0 0.25em 0.25em var(--light-gray4) inset;
+    }
+    .radio__input:checked {
+      box-shadow:
+        0 0 0 0.0625em var(--primary4) inset,
+        0 0 0 0.375em var(--primary3) inset,
+        0 0.25em 0.25em var(--light-gray4) inset;
+    }
+    /* Beyond mobile */
+    @media (min-width: 768px) {
+      form {
+        grid-template-columns: repeat(2,1fr);
+      }
+    }
+    /* Dark theme */
+    @media (prefers-color-scheme: dark) {
+      [data-pollstyles] body,
+      [data-pollstyles] input {
+        color: var(--light-gray1);
+      }
+      [data-pollstyles] body {
+        background-color: var(--dark-gray6);
+      }
+      .checkbox,
+      .radio {
+        background-color: var(--dark-gray5);
+        box-shadow:
+          0 0 0 0.0625em var(--dark-gray4) inset,
+          0 0 0 var(--dark-gray4) inset,
+          0 0 0 var(--dark-gray7);
+      }
+      .checkbox__input,
+      .radio__input {
+        background-color: var(--dark-gray4);
+      }
+      .checkbox,
+      .radio {
+        &:before {
+          box-shadow: 0 0 0 0.125em var(--primary2);
+        }
+        &:hover {
+          background-color: var(--dark-gray4);
+        }
+      }
+      .checkbox:has(.checkbox__input:checked),
+      .radio:has(.radio__input:checked) {
+        background-color: var(--dark-gray3);
+        box-shadow:
+          0 0 0 0.0625em var(--dark-gray4) inset,
+          0 -0.375em 0 var(--dark-gray4) inset,
+          0 0.25em 0.25em var(--dark-gray7);
+      }
+      .checkbox__input {
+        box-shadow:
+          0 0 0 0.0625em var(--dark-gray8) inset,
+          0 0.25em 0.25em var(--dark-gray6) inset;
+      }
+      .checkbox__input:checked {
+        background-color: var(--primary2);
+        box-shadow:
+          0 0 0 0.0625em var(--primary5) inset,
+          0 0.125em 0.25em var(--primary1) inset;
+      }
+      .radio__input {
+        box-shadow:
+          0 0 0 0.0625em var(--dark-gray8) inset,
+          0 0 0 0 var(--primary2) inset,
+          0 0.25em 0.25em var(--dark-gray6) inset;
+      }
+      .radio__input:checked {
+        background-color: var(--light-gray1);
+        box-shadow:
+          0 0 0 0.0625em var(--primary5) inset,
+          0 0 0 0.375em var(--primary2) inset,
+          0 0.25em 0.25em var(--dark-gray8) inset;
+      }
+    }
+  </style>
+
+  <!-- 3) Hamster CSS (SCSS-like) + layout for final result -->
+  <style>
+    .hamster-section {
+      display: none;
+    }
+    .hamster-section.active {
+      display: block;
+    }
+    .hamster-question {
+      text-align: center;
+      padding: 1rem;
+      background-color: #F0EAD2;
+      color: #333;
+      font-size: 1.2rem;
+      margin-top: 2rem;
+    }
+    /* The hamster wrapper, wheel, etc. (from your snippet) */
+    *[data-hamster] {
+      box-sizing: border-box;
+    }
+    [data-hamster] body {
+      padding: 0;
+      margin: 0;
+      font-family: sans-serif;
+      background-color: #728194;
+      color: white;
+      --wheel-width: 160px;
+      --handle-color: #3b4652;
+    }
+    .wrapper[data-hamster] {
+      position: relative;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      --hamster-speed: 0.25s;
+      --wheel-speed: 0.5s;
+      --wheel-angle: 0deg;
+    }
+    .wrapper[data-hamster].active {
+      display: flex;
+    }
+    .pix, .pix:after {
+      --m: 2;
+      position: absolute;
+      width: calc(var(--w) * var(--m));
+      height: calc(var(--h) * var(--m));
+      background-size: 100%;
+      background-repeat: no-repeat;
+      image-rendering: pixelated;
+    }
+    .puff {
+      --w: 15px;
+      --h: 14px;
+      background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA8AAAAOCAYAAADwikbvAAAAAXNSR0IArs4c6QAAAEhJREFUOE9jZEADjzZk/UcXg/HlAqYxIsvBOfg0oRsGMwSsmRSNyK5gJEcjzIBRzbgiGIf4AAYYRYkE5h1SEgtK8kQOD1IyBgBNBC/ng5m19gAAAABJRU5ErkJggg==);
+    }
+    @keyframes squidge {
+      0%, 100% {
+        transform: rotate(var(--angle)) translateY(-1px);
+      }
+      50% {
+        transform: rotate(0) translateY(0);
+      }
+    }
+    @keyframes run {
+      0%, 100% {
+        transform: translateX(var(--run-x)) rotate(var(--angle));
+      }
+      50% {
+        transform: translateX(0) rotate(0);
+      }
+    }
+    @keyframes up-down {
+      0%, 100% {
+        transform: translateY(-1px);
+      }
+      50% {
+        transform: translateY(0);
+      }
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(-360deg);
+      }
+    }
+    .wheel-frame.pix {
+      position: relative;
+      --w: 80px;
+      --h: 80px;
+      background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAAAXNSR0IArs4c6QAAAn5JREFUeF7t3NtygzAMBNDy/x9NJnScIeCLVisZkmyfbdk6LHGbkC5/N/lZ13VFtrIsy4KMzxp7ySZqWChIRI0I1GmA+4ZRLGujM9Y47iUdsDSVhdbCnbVuGuCsBkbpzN5HOGD2hkdgsxMZBnhXuCNo9D5DAJ+bmv0a501imRe1Zwow+mqyKOj8iP27AaOuINp0xnimFxcgs2AGQERNb08woHehiCaza3h6gwA9C2Q3HV0f7dEMiBaObmxmPaRXEyBScGajmWtZex4CWgtlNnNVbUvvAuxcHRrQUuCqdMxad2TQTOBo4qwG7rBOz0KAhisEAyp9Z9WWSTWBAiQAhde+p2s2pwQKkAAU3vhEORq9JVCABKDwxni1jwNeCRSgAO0C5Mh92LYEKn24aDETIG63zRCgE+54kCiBTkgl0Al3SqAOEL/kZidAAfoFyJlKoABJAXK6EihAUoCcrgQKkBQgpyuBAiQFyOlKYASg3lD1KerdGJ/ba5YABUgKkNOVwEhAHSSY5uljTQEKEBMgR1cTqBTaVPV0ls2pOaoLqBT2dfWEanD6nuX0kLkRVU/pG6FawyBAvRa+M/YePtA3lQzJdAEqhf+yo0df9HXXTgJHeM1TeF/TUsRwF3zkEEvvwwRaYvyROoNNW/BMCSzrWAt+AybSqymBv4SI4EEJ/AVEFM8F+K2viR48N+C3IXrxKMCCuBW5yb8kRg+wJxy7f+gQQf/QRhuaOZ5J3X6fIYCflMaI1KUA7k9p9rbISGI0XNljWAKPTWdtGMXN3kca4NWJzIZLT2ArkZm3d0HLXOPYV3oCa7fcvtHXlQR/FYqogb4c1MZfAmhF7TV4l989H/4WeD/sciFJAAAAAElFTkSuQmCC);
+      margin-bottom: 16px;
+      pointer-events: none;
+    }
+    .wheel {
+      width: 160px;
+      height: 160px;
+      display: flex;
+      justify-content: center;
+      align-items: end;
+      transform: rotate(var(--wheel-angle));
+    }
+    .wheel.spinning {
+      animation: spin var(--wheel-speed) infinite linear;
+    }
+    .wheel.spinning .hamster {
+      animation: none;
+    }
+    .wheel-support.pix {
+      background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAAAAXNSR0IArs4c6QAAAURJREFUeF7t28EJwkAARUHTpR3YgUXYgR3YpbKCVw3MKos8729JJv+QQ9wO/Uhgo/oL8fF0vr879na9LHXNS13MgAsQVxlggCiAeQsMEAUwb4EBogDmLTBAFMC8BQaIApi3wABRAPMWGCAKYN4CA0QBzFtggCiAeQsMEAUwb4EBogDmLTBAFMC8BQaIApi3wABRAPMWGCAKYN4CA0QByD+t73X0Sl+pPr9Q3XvhYPOX6XiQAcKjDRDwRhpggCiAeQsMEAUwb4GzAPGcafne99HlXqSnCUw46BPiSnjjdvuvHD70AANEAcxbYIAogHkLDBAFMG+BAaIA5i0wQBTAvAUGiAKYt8AAUQDzFhggCmDeAgNEAcxbYIAogHkLDBAFMG+BAaIA5i0wQBTAvAUGiAKYt8AAUQDzFhggCmC+3ALxfn6ePwDuUzhgOFkZ9gAAAABJRU5ErkJggg==);
+      animation: spin var(--wheel-speed) infinite linear;
+      --w: 80px;
+      --h: 80px;
+    }
+    .hamster.puff.pix {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px;
+      margin-bottom: 6px;
+      z-index: 99;
+    }
+    .ear.pix {
+      --w: 5px;
+      --h: 5px;
+      background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAAXNSR0IArs4c6QAAACJJREFUGFdjZGBgYHi0Ies/iAYBuYBpjIzIAjAJEgSxmQkAyjQQ9ygpCP0AAAAASUVORK5CYII=);
+      top: -4px;
+      left: 6px;
+      animation: up-down infinite var(--hamster-speed);
+    }
+    .hamster:before,
+    .hamster:after {
+      position: absolute;
+      content: '';
+      background: #693215;
+    }
+    .hamster:before {
+      width: 3px;
+      height: 4px;
+      left: 5px;
+      animation: up-down infinite var(--hamster-speed);
+    }
+    .hamster:after {
+      width: 6px;
+      height: 2px;
+      bottom: 7px;
+      left: -3px;
+      animation: up-down infinite var(--hamster-speed);
+    }
+    .head,
+    .bum {
+      z-index: -1;
+      top: 0px;
+      animation: squidge var(--hamster-speed) infinite;
+    }
+    .head {
+      left: -5px;
+      --angle: 10deg;
+    }
+    .bum {
+      right: -5px;
+      --angle: -10deg;
+    }
+    .head:after,
+    .bum:after {
+      background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAGCAYAAADkOT91AAAAAXNSR0IArs4c6QAAACFJREFUGFdjZGBgYHi0Ies/iJYLmMbICOOABECAHAF0QwFBIRPzdQwRVAAAAABJRU5ErkJggg==);
+      --w: 4px;
+      --h: 6px;
+      bottom: -4px;
+      animation: run var(--hamster-speed) infinite;
+      content: "";
+      position: absolute;
+    }
+    .head:after {
+      left: 8px;
+      --run-x: -2px;
+      --angle: 6deg;
+    }
+    .bum:after {
+      right: 6px;
+      --run-x: 2px;
+      --angle: -6deg;
+    }
+
+    .sign {
+      display: none;
+    }
+    .sign.active {
+      display: block;
+      position: fixed;
+      font-family: Arial, Helvetica, sans-serif;
+      color: rgb(255, 255, 255);
+      bottom: 10px;
+      right: 10px;
+      font-size: 10px;
+      text-transform: none;
+    }
+    .sign.active a {
+      color: rgb(255, 255, 255);
+      text-decoration: none;
+      text-transform: none;
+    }
+    .sign.active a:hover {
+      text-decoration: underline;
+    }
+
+    /* Final result styling */
+    .result-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+    .result-container.active {
+      display: flex;
+    }
+    .result-container img {
+      max-width: 300px;
+      margin-bottom: 1rem;
+    }
+    .result-container .cat-desc {
+      font-size: 1.2rem;
+      color: #333;
+      background-color: #f5f5f5;
+      padding: 1rem;
+      border-radius: 8px;
+      max-width: 400px;
+    }
+  </style>
 </head>
 <body>
-    <div id="root"></div>
-    <form id="questionnaire">
-        <div class="input-group">
-            <label class="checkbox">
-                <input class="checkbox__input" type="checkbox" name="personality" value="милый" />
-                <span class="checkbox__label">милый</span>
-            </label>
-            <label class="checkbox">
-                <input class="checkbox__input" type="checkbox" name="personality" value="добрый" />
-                <span class="checkbox__label">добрый</span>
-            </label>
-            <label class="checkbox">
-                <input class="checkbox__input" type="checkbox" name="personality" value="обаятельный" />
-                <span class="checkbox__label">обаятельный</span>
-            </label>
-        </div>
-        <div class="input-group">
-            <label class="radio">
-                <input class="radio__input" type="radio" name="type" value="кисочка" />
-                <span class="radio__label">кисочка</span>
-            </label>
-            <label class="radio">
-                <input class="radio__input" type="radio" name="type" value="чьмо" />
-                <span class="radio__label">чьмо</span>
-            </label>
-            <label class="radio">
-                <input class="radio__input" type="radio" name="type" value="посмотрим" />
-                <span class="radio__label">посмотрим</span>
-            </label>
-        </div>
-    </form>
-    <div class="wrapper">
-        <div class="wheel-frame pix">
-            <div class="wheel">
-                <div class="wheel-support pix"></div>
-                <div class="hamster puff pix">
-                    <div class="ear pix"></div>
-                    <div class="head puff pix"></div>
-                    <div class="bum puff pix"></div>
-                </div>
+
+<!-- React mountpoint -->
+<div id="root"></div>
+
+<!--  Optional: You can place your images or references in your HTML if needed -->
+<!-- <img src="..." alt="Cat" style="display:none;" /> -->
+
+<script type="module">
+/*
+  We'll use React from ESM. Make sure to run this through a local server
+  (e.g., "npx serve") or an environment that supports ES modules in the browser.
+*/
+import React, { StrictMode, useEffect, useState } from "https://esm.sh/react";
+import { createRoot } from "https://esm.sh/react-dom/client";
+
+// We'll define an App that controls the steps:
+// 1) Recording Toggle
+// 2) Questionnaire
+// 3) Hamster spinner
+// 4) Final result
+function App() {
+  const [step, setStep] = useState<1|2|3|4>(1);
+
+  // -------------- For RecordingToggle --------------
+  const [recording, setRecording] = useState(false);
+  const [time, setTime] = useState(0);
+  const timeMax = 60;
+  const [timeStopped, setTimeStopped] = useState(0);
+  const circumference = recording ? 40.84 : 50.27;
+  const circumferencePart = recording ? 1 - (time / timeMax) : 1;
+  const strokeDashArray = `${circumference} ${circumference}`;
+  const strokeDashOffset = +(circumference * circumferencePart).toFixed(2);
+
+  function timeFormatted() {
+    const timeToDisplay = recording ? time : timeStopped;
+    const minutes = `0${Math.floor(timeToDisplay / 60)}`.slice(-2);
+    const seconds = `0${timeToDisplay % 60}`.slice(-2);
+    return `${minutes}:${seconds}`;
+  }
+
+  // timer loop
+  useEffect(() => {
+    let frameId: any = 0;
+    if (recording) {
+      setTimeStopped(0);
+      const tick = () => {
+        setTime((t) => t + 1);
+        // keep track of the displayed time for the transition
+        setTimeStopped((t) => t + 1);
+        frameId = setTimeout(tick, 1000);
+      };
+      frameId = setTimeout(tick, 1000);
+    } else {
+      setTime(0);
+      clearTimeout(frameId);
+    }
+    return () => {
+      clearTimeout(frameId);
+    };
+  }, [recording]);
+
+  // stop automatically if time hits limit
+  useEffect(() => {
+    if (time >= timeMax) {
+      setRecording(false);
+      // after it stops, go to next step?
+      // But the user only said "Then after button was pressed". So let's do it on toggle below
+    }
+  }, [time]);
+
+  // This function toggles recording. Once the user stops, we move to step 2.
+  function toggleRecording() {
+    setRecording(!recording);
+    if(recording === true) {
+      // if we are currently recording, and user clicks => we end
+      setStep(2); 
+    }
+  }
+
+  // -------------- For Questionnaire --------------
+  // Let’s track total points in a single state
+  // “милый, добрый, обаятельный” => multiple checkboxes => each +1
+  // “кисочка, чьмо, посмотрим” => single radio => кисочка => +1, чьмо => -1, посмотрим => +1
+  const [answers, setAnswers] = useState({
+    milyi: false,
+    dobryi: false,
+    obayatelnyi: false,
+    radio: '' // 'kisochka' | 'chmo' | 'posmotrim'
+  });
+
+  const handleCheckbox = (key: 'milyi'|'dobryi'|'obayatelnyi') => {
+    setAnswers((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+  const handleRadio = (value: string) => {
+    setAnswers((prev) => ({ ...prev, radio: value }));
+  };
+
+  function onSubmitQuestionnaire(e: React.FormEvent) {
+    e.preventDefault();
+    setStep(3);
+  }
+
+  // -------------- For Hamster --------------
+  // “раскрутите хомячка по своему усмотрению” => we add 1 point if the slider > 5?
+  const [speedFactor, setSpeedFactor] = useState(3);
+  const defaultHamsterEnergy = 1000;
+  const [hamsterEnergy, setHamsterEnergy] = useState(defaultHamsterEnergy);
+  const [hamsterRunning, setHamsterRunning] = useState(true);
+  const [wheelSpinning, setWheelSpinning] = useState(false);
+
+  // set initial CSS variables
+  useEffect(() => {
+    updateHamsterSpeed(speedFactor);
+  }, []);
+
+  function updateHamsterSpeed(factor: number) {
+    const wrapper = document.querySelector('.wrapper') as HTMLElement;
+    if(wrapper) {
+      wrapper.style.setProperty('--hamster-speed', `${1 / factor}s`);
+      wrapper.style.setProperty('--wheel-speed', `${2 / factor}s`);
+      wrapper.style.setProperty('--wheel-angle', `${0.4 * factor}deg`);
+    }
+  }
+
+  useEffect(() => {
+    updateHamsterSpeed(speedFactor);
+  }, [speedFactor]);
+
+  // "energy drain" loop
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      if(hamsterRunning) {
+        setHamsterEnergy((en) => en - speedFactor*speedFactor);
+      }
+    }, 500);
+    return () => clearInterval(intervalId);
+  }, [speedFactor, hamsterRunning]);
+
+  useEffect(() => {
+    if(hamsterRunning && hamsterEnergy < 0) {
+      // hamster collapses => wheel spins itself for 6s
+      setHamsterRunning(false);
+      setWheelSpinning(true);
+      setTimeout(() => {
+        setHamsterEnergy(defaultHamsterEnergy);
+        setHamsterRunning(true);
+        setWheelSpinning(false);
+      }, 6000);
+    }
+  }, [hamsterEnergy, hamsterRunning]);
+
+  function onFinishHamster() {
+    setStep(4);
+  }
+
+  // -------------- For Final Result --------------
+  // We'll compute total points
+  // checkboxes: each that is checked => +1
+  // radio kisochka => +1, chmo => -1, posmotrim => +1
+  // hamster => if speedFactor > 5 => +1
+  // Then pick a cat image & text based on points
+  const [finalPoints, setFinalPoints] = useState(0);
+  const [catImage, setCatImage] = useState('');
+  const [catText, setCatText] = useState('');
+
+  useEffect(() => {
+    if(step === 4) {
+      let points = 0;
+      if(answers.milyi) points++;
+      if(answers.dobryi) points++;
+      if(answers.obayatelnyi) points++;
+      if(answers.radio === 'kisochka') points++;
+      if(answers.radio === 'chmo') points--;
+      if(answers.radio === 'posmotrim') points++;
+      if(speedFactor > 5) points++;
+
+      setFinalPoints(points);
+
+      // Let’s do some simple branching:
+      if(points < 0) {
+        setCatImage("https://i.redd.it/i-keep-seeing-this-angry-cat-meme-does-anyone-know-what-v0-0o96ygkg9jw91.jpg?width=1080&format=pjpg&auto=webp&s=8a7220f58ae5e5ecbef518367d48b96f7327e06d");
+        setCatText("Ты слегка зловредный котик! Пушисто злишься и шипишь на всех вокруг!");
+      } else if(points <= 2) {
+        setCatImage("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdBWB76EZKUgHdARYa-XNyIzoiJiUiyKiFrg&s");
+        setCatText("Ты серьёзный, но справедливый кот. Держишь дистанцию, но в душе добряк.");
+      } else {
+        setCatImage("https://static.displate.com/857x1200/displate/2023-02-01/98e24af569e8f8dfb4391dbac0accb10_9edaab163f5e46e04be6a7ecb1dda7ae.jpg");
+        setCatText("Ты невероятно милый, дружелюбный и обаятельный котик! Все хотят тебя гладить!");
+      }
+    }
+  }, [step]);
+
+  return (
+    <>
+      {/* STEP 1: Recording Toggle */}
+      {step === 1 && (
+        <button
+          className="recorder"
+          type="button"
+          aria-pressed={recording}
+          onClick={toggleRecording}
+        >
+          <span className="recorder__label-start" aria-hidden={recording}>
+            Stop
+          </span>
+          <span className="recorder__switch">
+            <span className="recorder__switch-handle">
+              <svg
+                className="recorder__timer"
+                viewBox="0 0 16 16"
+                width="16px"
+                height="16px"
+                aria-hidden="true"
+              >
+                <g
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeWidth="0"
+                  transform="rotate(-90,8,8)"
+                >
+                  <circle
+                    className="recorder__timer-ring"
+                    stroke="hsla(0,0%,100%,0.3)"
+                    cx="8"
+                    cy="8"
+                    r="8"
+                  />
+                  <circle
+                    className="recorder__timer-ring"
+                    stroke="hsla(0,0%,100%,0.5)"
+                    cx="8"
+                    cy="8"
+                    r="8"
+                    strokeDasharray={strokeDashArray}
+                    strokeDashoffset={strokeDashOffset}
+                  />
+                </g>
+              </svg>
+            </span>
+          </span>
+          <span className="recorder__label-end" aria-hidden={!recording}>
+            <span className="recorder__label-end-text">Record</span>
+            <span className="recorder__label-end-text">{timeFormatted()}</span>
+          </span>
+        </button>
+      )}
+
+      {/* STEP 2: Questionnaire */}
+      {step === 2 && (
+        <div className="poll-container active" data-pollstyles="">
+          <form onSubmit={onSubmitQuestionnaire}>
+            {/* Row 1: милый, добрый, обаятельный (multiple) */}
+            <div className="input-group">
+              <label className="checkbox">
+                <input
+                  className="checkbox__input"
+                  type="checkbox"
+                  checked={answers.milyi}
+                  onChange={() => handleCheckbox('milyi')}
+                />
+                <span className="checkbox__label">милый</span>
+              </label>
+              <label className="checkbox">
+                <input
+                  className="checkbox__input"
+                  type="checkbox"
+                  checked={answers.dobryi}
+                  onChange={() => handleCheckbox('dobryi')}
+                />
+                <span className="checkbox__label">добрый</span>
+              </label>
+              <label className="checkbox">
+                <input
+                  className="checkbox__input"
+                  type="checkbox"
+                  checked={answers.obayatelnyi}
+                  onChange={() => handleCheckbox('obayatelnyi')}
+                />
+                <span className="checkbox__label">обаятельный</span>
+              </label>
             </div>
+            {/* Row 2: кисочка, чьмо, посмотрим (radio) */}
+            <div className="input-group">
+              <label className="radio">
+                <input
+                  className="radio__input"
+                  type="radio"
+                  name="dummy2"
+                  checked={answers.radio === 'kisochka'}
+                  onChange={() => handleRadio('kisochka')}
+                />
+                <span className="radio__label">кисочка</span>
+              </label>
+              <label className="radio">
+                <input
+                  className="radio__input"
+                  type="radio"
+                  name="dummy2"
+                  checked={answers.radio === 'chmo'}
+                  onChange={() => handleRadio('chmo')}
+                />
+                <span className="radio__label">чьмо</span>
+              </label>
+              <label className="radio">
+                <input
+                  className="radio__input"
+                  type="radio"
+                  name="dummy2"
+                  checked={answers.radio === 'posmotrim'}
+                  onChange={() => handleRadio('posmotrim')}
+                />
+                <span className="radio__label">посмотрим</span>
+              </label>
+            </div>
+
+            <button type="submit" style={{
+              marginTop: "1rem",
+              padding: "0.75rem 1.5rem",
+              borderRadius: "0.5rem",
+              backgroundColor: "var(--primary3)",
+              color: "white",
+              border: "none",
+              cursor: "pointer",
+            }}>
+              Next
+            </button>
+          </form>
         </div>
-        <input type="range" name="speed" min="0" max="11" value="3">
-    </div>
-    <div class="sign">
-        by masahito / <a href="http://www.ma5a.com/">ma5a.com</a>
-    </div>
-    <div id="result">
-        <img id="result-image" src="" alt="Cat Image">
-        <p id="result-description"></p>
-    </div>
-    <script src="script.js"></script>
+      )}
+
+      {/* STEP 3: Hamster spinner */}
+      {step === 3 && (
+        <div className="hamster-section active">
+          <div className="hamster-question">
+            раскрутите хомячка по своему усмотрению
+          </div>
+          <div className="wrapper active" data-hamster>
+            <div className={`wheel ${wheelSpinning ? 'spinning' : ''}`}>
+              <div className="wheel-support pix"></div>
+              <div className="hamster puff pix">
+                <div className="ear pix"></div>
+                <div className="head puff pix"></div>
+                <div className="bum puff pix"></div>
+              </div>
+            </div>
+            <input
+              type="range"
+              name="speed"
+              min="0"
+              max="11"
+              value={speedFactor}
+              onChange={(e) => setSpeedFactor(Number(e.target.value))}
+            />
+          </div>
+          <div className="sign active">
+            by masahito / <a href="http://www.ma5a.com/">ma5a.com</a>
+          </div>
+          <div style={{textAlign: "center", marginTop: "2rem"}}>
+            <button
+              style={{
+                padding: "0.75rem 1.5rem",
+                borderRadius: "0.5rem",
+                backgroundColor: "var(--primary3)",
+                color: "white",
+                border: "none",
+                cursor: "pointer",
+              }}
+              onClick={onFinishHamster}
+            >
+              Показать результат
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 4: Final result */}
+      {step === 4 && (
+        <div className="result-container active">
+          {catImage && <img src={catImage} alt="Result Cat" />}
+          <div className="cat-desc">
+            <p>Ваш итоговый счёт: {finalPoints}</p>
+            <p>{catText}</p>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+createRoot(document.getElementById("root")).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+</script>
+
 </body>
 </html>
