@@ -113,7 +113,7 @@
         background-color var(--trans-dur),
         box-shadow var(--trans-dur),
         transform var(--trans-dur) var(--trans-timing),
-        transform-origin var(--trans-dur) var(--trans-timing);
+        transform-origin var(--trans-dur) var (--trans-timing);
     }
     .recorder__timer {
       display: block;
@@ -275,7 +275,7 @@
       transition:
         background-color var(--trans-dur),
         box-shadow var(--trans-dur),
-        transform var(--trans-dur) var(--ease-in-out);
+        transform var(--trans-dur) var (--ease-in-out);
       -webkit-tap-highlight-color: transparent;
     }
     .checkbox__input,
@@ -283,7 +283,7 @@
       transition:
         background-color var(--trans-dur),
         box-shadow var(--trans-dur),
-        transform var(--trans-dur) var(--ease-in-out);
+        transform var(--trans-dur) var (--ease-in-out);
       -webkit-tap-highlight-color: transparent;
       background-color: var(--light-gray1);
       flex-shrink: 0;
@@ -671,31 +671,110 @@
 </head>
 <body>
 
-<!-- React mountpoint -->
-<div id="root"></div>
+<!-- Step 1: Recording Toggle -->
+<div id="step1" class="step">
+  <button id="recorder" class="recorder" type="button" aria-pressed="false">
+    <span class="recorder__label-start">Stop</span>
+    <span class="recorder__switch">
+      <span class="recorder__switch-handle">
+        <svg class="recorder__timer" viewBox="0 0 16 16" width="16px" height="16px" aria-hidden="true">
+          <g fill="none" stroke-linecap="round" stroke-width="0" transform="rotate(-90,8,8)">
+            <circle class="recorder__timer-ring" stroke="hsla(0,0%,100%,0.3)" cx="8" cy="8" r="8" />
+            <circle class="recorder__timer-ring" stroke="hsla(0,0%,100%,0.5)" cx="8" cy="8" r="8" />
+          </g>
+        </svg>
+      </span>
+    </span>
+    <span class="recorder__label-end">
+      <span class="recorder__label-end-text">Record</span>
+      <span class="recorder__label-end-text" id="time-display">00:00</span>
+    </span>
+  </button>
+</div>
 
-<script type="module">
-import React, { StrictMode, useEffect, useState } from "https://esm.sh/react";
-import { createRoot } from "https://esm.sh/react-dom/client";
+<!-- Step 2: Questionnaire -->
+<div id="step2" class="step poll-container">
+  <form id="questionnaire-form">
+    <div class="input-group">
+      <label class="checkbox">
+        <input class="checkbox__input" type="checkbox" id="milyi" />
+        <span class="checkbox__label">милый</span>
+      </label>
+      <label class="checkbox">
+        <input class="checkbox__input" type="checkbox" id="dobryi" />
+        <span class="checkbox__label">добрый</span>
+      </label>
+      <label class="checkbox">
+        <input class="checkbox__input" type="checkbox" id="obayatelnyi" />
+        <span class="checkbox__label">обаятельный</span>
+      </label>
+    </div>
+    <div class="input-group">
+      <label class="radio">
+        <input class="radio__input" type="radio" name="radio" value="kisochka" />
+        <span class="radio__label">кисочка</span>
+      </label>
+      <label class="radio">
+        <input class="radio__input" type="radio" name="radio" value="chmo" />
+        <span class="radio__label">чьмо</span>
+      </label>
+      <label class="radio">
+        <input class="radio__input" type="radio" name="radio" value="posmotrim" />
+        <span class="radio__label">посмотрим</span>
+      </label>
+    </div>
+    <button type="submit" style="margin-top: 1rem; padding: 0.75rem 1.5rem; border-radius: 0.5rem; background-color: var(--primary3); color: white; border: none; cursor: pointer;">
+      Next
+    </button>
+  </form>
+</div>
 
-// We'll define an App that controls the steps:
-// 1) Recording Toggle
-// 2) Questionnaire
-// 3) Hamster spinner
-// 4) Final result
-function App() {
-  // Step control: 1|2|3|4 (just store as a number in JS)
-  const [step, setStep] = useState(1);
+<!-- Step 3: Hamster spinner -->
+<div id="step3" class="step hamster-section">
+  <div class="hamster-question">раскрутите хомячка по своему усмотрению</div>
+  <div class="wrapper" data-hamster>
+    <div class="wheel">
+      <div class="wheel-support pix"></div>
+      <div class="hamster puff pix">
+        <div class="ear pix"></div>
+        <div class="head puff pix"></div>
+        <div class="bum puff pix"></div>
+      </div>
+    </div>
+    <input type="range" name="speed" min="0" max="11" id="speedFactor" />
+  </div>
+  <div class="sign active">by masahito / <a href="http://www.ma5a.com/">ma5a.com</a></div>
+  <div style="text-align: center; margin-top: 2rem;">
+    <button style="padding: 0.75rem 1.5rem; border-radius: 0.5rem; background-color: var(--primary3); color: white; border: none; cursor: pointer;" id="finishHamster">
+      Показать результат
+    </button>
+  </div>
+</div>
 
-  // -------------- For RecordingToggle --------------
-  const [recording, setRecording] = useState(false);
-  const [time, setTime] = useState(0);
+<!-- Step 4: Final result -->
+<div id="step4" class="step result-container">
+  <img id="catImage" src="" alt="Result Cat" />
+  <div class="cat-desc">
+    <p>Ваш итоговый счёт: <span id="finalPoints"></span></p>
+    <p id="catText"></p>
+  </div>
+</div>
+
+<script>
+  let step = 1;
+  let recording = false;
+  let time = 0;
   const timeMax = 60;
-  const [timeStopped, setTimeStopped] = useState(0);
-  const circumference = recording ? 40.84 : 50.27;
-  const circumferencePart = recording ? 1 - (time / timeMax) : 1;
+  let timeStopped = 0;
+  const circumference = 50.27;
   const strokeDashArray = `${circumference} ${circumference}`;
-  const strokeDashOffset = +(circumference * circumferencePart).toFixed(2);
+  let intervalId;
+
+  function updateStep() {
+    document.querySelectorAll('.step').forEach((el, index) => {
+      el.style.display = index + 1 === step ? 'block' : 'none';
+    });
+  }
 
   function timeFormatted() {
     const timeToDisplay = recording ? time : timeStopped;
@@ -704,75 +783,39 @@ function App() {
     return `${minutes}:${seconds}`;
   }
 
-  // timer loop
-  useEffect(() => {
-    let frameId = 0;
-    if (recording) {
-      setTimeStopped(0);
-      const tick = () => {
-        setTime((t) => t + 1);
-        // keep track of the displayed time for the transition
-        setTimeStopped((t) => t + 1);
-        frameId = setTimeout(tick, 1000);
-      };
-      frameId = setTimeout(tick, 1000);
-    } else {
-      setTime(0);
-      clearTimeout(frameId);
-    }
-    return () => {
-      clearTimeout(frameId);
-    };
-  }, [recording]);
-
-  // stop automatically if time hits limit
-  useEffect(() => {
-    if (time >= timeMax) {
-      setRecording(false);
-    }
-  }, [time]);
-
-  // This function toggles recording. Once the user stops, we move to step 2.
   function toggleRecording() {
-    const newState = !recording;
-    setRecording(newState);
-    if (recording === true) {
-      // if we are currently recording, and user clicks => we end
-      setStep(2);
+    recording = !recording;
+    document.getElementById('recorder').setAttribute('aria-pressed', recording);
+    if (recording) {
+      intervalId = setInterval(() => {
+        time++;
+        timeStopped = time;
+        document.getElementById('time-display').textContent = timeFormatted();
+        if (time >= timeMax) {
+          toggleRecording();
+        }
+      }, 1000);
+    } else {
+      clearInterval(intervalId);
+      time = 0;
+      step = 2;
+      updateStep();
     }
   }
 
-  // -------------- For Questionnaire --------------
-  // Let’s track total points in a single state
-  // “милый, добрый, обаятельный” => multiple checkboxes => each +1
-  // “кисочка, чьмо, посмотрим” => single radio => кисочка => +1, чьмо => -1, посмотрим => +1
-  const [answers, setAnswers] = useState({
-    milyi: false,
-    dobryi: false,
-    obayatelnyi: false,
-    radio: "" // 'kisochka' | 'chmo' | 'posmotrim'
+  document.getElementById('recorder').addEventListener('click', toggleRecording);
+
+  document.getElementById('questionnaire-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    step = 3;
+    updateStep();
   });
 
-  function handleCheckbox(key) {
-    setAnswers((prev) => ({ ...prev, [key]: !prev[key] }));
-  }
-
-  function handleRadio(value) {
-    setAnswers((prev) => ({ ...prev, radio: value }));
-  }
-
-  function onSubmitQuestionnaire(e) {
-    e.preventDefault();
-    setStep(3);
-  }
-
-  // -------------- For Hamster --------------
-  // “раскрутите хомячка по своему усмотрению” => we add 1 point if the slider > 5?
-  const [speedFactor, setSpeedFactor] = useState(3);
+  let speedFactor = 3;
   const defaultHamsterEnergy = 1000;
-  const [hamsterEnergy, setHamsterEnergy] = useState(defaultHamsterEnergy);
-  const [hamsterRunning, setHamsterRunning] = useState(true);
-  const [wheelSpinning, setWheelSpinning] = useState(false);
+  let hamsterEnergy = defaultHamsterEnergy;
+  let hamsterRunning = true;
+  let wheelSpinning = false;
 
   function updateHamsterSpeed(factor) {
     const wrapper = document.querySelector(".wrapper");
@@ -783,283 +826,59 @@ function App() {
     }
   }
 
-  useEffect(() => {
+  document.getElementById('speedFactor').addEventListener('input', (e) => {
+    speedFactor = Number(e.target.value);
     updateHamsterSpeed(speedFactor);
-  }, []);
+  });
 
-  useEffect(() => {
-    updateHamsterSpeed(speedFactor);
-  }, [speedFactor]);
-
-  // "energy drain" loop
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (hamsterRunning) {
-        setHamsterEnergy((en) => en - speedFactor * speedFactor);
-      }
-    }, 500);
-    return () => clearInterval(intervalId);
-  }, [speedFactor, hamsterRunning]);
-
-  useEffect(() => {
-    if (hamsterRunning && hamsterEnergy < 0) {
-      // hamster collapses => wheel spins itself for 6s
-      setHamsterRunning(false);
-      setWheelSpinning(true);
-      setTimeout(() => {
-        setHamsterEnergy(defaultHamsterEnergy);
-        setHamsterRunning(true);
-        setWheelSpinning(false);
-      }, 6000);
-    }
-  }, [hamsterEnergy, hamsterRunning]);
-
-  function onFinishHamster() {
-    setStep(4);
-  }
-
-  // -------------- For Final Result --------------
-  // We'll compute total points
-  // checkboxes: each that is checked => +1
-  // radio kisochka => +1, chmo => -1, posmotrim => +1
-  // hamster => if speedFactor > 5 => +1
-  // Then pick a cat image & text based on points
-  const [finalPoints, setFinalPoints] = useState(0);
-  const [catImage, setCatImage] = useState("");
-  const [catText, setCatText] = useState("");
-
-  useEffect(() => {
-    if (step === 4) {
-      let points = 0;
-      if (answers.milyi) points++;
-      if (answers.dobryi) points++;
-      if (answers.obayatelnyi) points++;
-      if (answers.radio === "kisochka") points++;
-      if (answers.radio === "chmo") points--;
-      if (answers.radio === "posmotrim") points++;
-      if (speedFactor > 5) points++;
-
-      setFinalPoints(points);
-
-      // Let’s do some simple branching:
-      if (points < 0) {
-        setCatImage("https://i.redd.it/i-keep-seeing-this-angry-cat-meme-does-anyone-know-what-v0-0o96ygkg9jw91.jpg?width=1080&format=pjpg&auto=webp&s=8a7220f58ae5e5ecbef518367d48b96f7327e06d");
-        setCatText("Ты слегка зловредный котик! Пушисто злишься и шипишь на всех вокруг!");
-      } else if (points <= 2) {
-        setCatImage("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdBWB76EZKUgHdARYa-XNyIzoiJiUiyKiFrg&s");
-        setCatText("Ты серьёзный, но справедливый кот. Держишь дистанцию, но в душе добряк.");
-      } else {
-        setCatImage("https://static.displate.com/857x1200/displate/2023-02-01/98e24af569e8f8dfb4391dbac0accb10_9edaab163f5e46e04be6a7ecb1dda7ae.jpg");
-        setCatText("Ты невероятно милый, дружелюбный и обаятельный котик! Все хотят тебя гладить!");
+  setInterval(() => {
+    if (hamsterRunning) {
+      hamsterEnergy -= speedFactor * speedFactor;
+      if (hamsterEnergy < 0) {
+        hamsterRunning = false;
+        wheelSpinning = true;
+        setTimeout(() => {
+          hamsterEnergy = defaultHamsterEnergy;
+          hamsterRunning = true;
+          wheelSpinning = false;
+        }, 6000);
       }
     }
-  }, [step]);
+  }, 500);
 
-  return (
-    <>
-      {/* STEP 1: Recording Toggle */}
-      {step === 1 && (
-        <button
-          className="recorder"
-          type="button"
-          aria-pressed={recording}
-          onClick={toggleRecording}
-        >
-          <span className="recorder__label-start" aria-hidden={recording}>
-            Stop
-          </span>
-          <span className="recorder__switch">
-            <span className="recorder__switch-handle">
-              <svg
-                className="recorder__timer"
-                viewBox="0 0 16 16"
-                width="16px"
-                height="16px"
-                aria-hidden="true"
-              >
-                <g
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeWidth="0"
-                  transform="rotate(-90,8,8)"
-                >
-                  <circle
-                    className="recorder__timer-ring"
-                    stroke="hsla(0,0%,100%,0.3)"
-                    cx="8"
-                    cy="8"
-                    r="8"
-                  />
-                  <circle
-                    className="recorder__timer-ring"
-                    stroke="hsla(0,0%,100%,0.5)"
-                    cx="8"
-                    cy="8"
-                    r="8"
-                    strokeDasharray={strokeDashArray}
-                    strokeDashoffset={strokeDashOffset}
-                  />
-                </g>
-              </svg>
-            </span>
-          </span>
-          <span className="recorder__label-end" aria-hidden={!recording}>
-            <span className="recorder__label-end-text">Record</span>
-            <span className="recorder__label-end-text">{timeFormatted()}</span>
-          </span>
-        </button>
-      )}
+  document.getElementById('finishHamster').addEventListener('click', () => {
+    step = 4;
+    updateStep();
+    let points = 0;
+    if (document.getElementById('milyi').checked) points++;
+    if (document.getElementById('dobryi').checked) points++;
+    if (document.getElementById('obayatelnyi').checked) points++;
+    const radioValue = document.querySelector('input[name="radio"]:checked').value;
+    if (radioValue === "kisochka") points++;
+    if (radioValue === "chmo") points--;
+    if (radioValue === "posmotrim") points++;
+    if (speedFactor > 5) points++;
 
-      {/* STEP 2: Questionnaire */}
-      {step === 2 && (
-        <div className="poll-container active" data-pollstyles="">
-          <form onSubmit={onSubmitQuestionnaire}>
-            {/* Row 1: милый, добрый, обаятельный (multiple) */}
-            <div className="input-group">
-              <label className="checkbox">
-                <input
-                  className="checkbox__input"
-                  type="checkbox"
-                  checked={answers.milyi}
-                  onChange={() => handleCheckbox("milyi")}
-                />
-                <span className="checkbox__label">милый</span>
-              </label>
-              <label className="checkbox">
-                <input
-                  className="checkbox__input"
-                  type="checkbox"
-                  checked={answers.dobryi}
-                  onChange={() => handleCheckbox("dobryi")}
-                />
-                <span className="checkbox__label">добрый</span>
-              </label>
-              <label className="checkbox">
-                <input
-                  className="checkbox__input"
-                  type="checkbox"
-                  checked={answers.obayatelnyi}
-                  onChange={() => handleCheckbox("obayatelnyi")}
-                />
-                <span className="checkbox__label">обаятельный</span>
-              </label>
-            </div>
-            {/* Row 2: кисочка, чьмо, посмотрим (radio) */}
-            <div className="input-group">
-              <label className="radio">
-                <input
-                  className="radio__input"
-                  type="radio"
-                  name="dummy2"
-                  checked={answers.radio === "kisochka"}
-                  onChange={() => handleRadio("kisochka")}
-                />
-                <span className="radio__label">кисочка</span>
-              </label>
-              <label className="radio">
-                <input
-                  className="radio__input"
-                  type="radio"
-                  name="dummy2"
-                  checked={answers.radio === "chmo"}
-                  onChange={() => handleRadio("chmo")}
-                />
-                <span className="radio__label">чьмо</span>
-              </label>
-              <label className="radio">
-                <input
-                  className="radio__input"
-                  type="radio"
-                  name="dummy2"
-                  checked={answers.radio === "posmotrim"}
-                  onChange={() => handleRadio("posmotrim")}
-                />
-                <span className="radio__label">посмотрим</span>
-              </label>
-            </div>
+    document.getElementById('finalPoints').textContent = points;
 
-            <button
-              type="submit"
-              style={{
-                marginTop: "1rem",
-                padding: "0.75rem 1.5rem",
-                borderRadius: "0.5rem",
-                backgroundColor: "var(--primary3)",
-                color: "white",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              Next
-            </button>
-          </form>
-        </div>
-      )}
+    let catImage = "";
+    let catText = "";
+    if (points < 0) {
+      catImage = "https://i.redd.it/i-keep-seeing-this-angry-cat-meme-does-anyone-know-what-v0-0o96ygkg9jw91.jpg?width=1080&format=pjpg&auto=webp&s=8a7220f58ae5e5ecbef518367d48b96f7327e06d";
+      catText = "Ты слегка зловредный котик! Пушисто злишься и шипишь на всех вокруг!";
+    } else if (points <= 2) {
+      catImage = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdBWB76EZKUgHdARYa-XNyIzoiJiUiyKiFrg&s";
+      catText = "Ты серьёзный, но справедливый кот. Держишь дистанцию, но в душе добряк.";
+    } else {
+      catImage = "https://static.displate.com/857x1200/displate/2023-02-01/98e24af569e8f8dfb4391dbac0accb10_9edaab163f5e46e04be6a7ecb1dda7ae.jpg";
+      catText = "Ты невероятно милый, дружелюбный и обаятельный котик! Все хотят тебя гладить!";
+    }
 
-      {/* STEP 3: Hamster spinner */}
-      {step === 3 && (
-        <div className="hamster-section active">
-          <div className="hamster-question">
-            раскрутите хомячка по своему усмотрению
-          </div>
-          <div className="wrapper active" data-hamster>
-            <div className={`wheel ${wheelSpinning ? "spinning" : ""}`}>
-              <div className="wheel-support pix"></div>
-              <div className="hamster puff pix">
-                <div className="ear pix"></div>
-                <div className="head puff pix"></div>
-                <div className="bum puff pix"></div>
-              </div>
-            </div>
-            <input
-              type="range"
-              name="speed"
-              min="0"
-              max="11"
-              value={speedFactor}
-              onChange={(e) => setSpeedFactor(Number(e.target.value))}
-            />
-          </div>
-          <div className={`sign ${true ? "active" : ""}`}>
-            by masahito / <a href="http://www.ma5a.com/" >ma5a.com</a>
-          </div>
-          <div style={{textAlign: "center", marginTop: "2rem"}}>
-            <button
-              style={{
-                padding: "0.75rem 1.5rem",
-                borderRadius: "0.5rem",
-                backgroundColor: "var(--primary3)",
-                color: "white",
-                border: "none",
-                cursor: "pointer",
-              }}
-              onClick={onFinishHamster}
-            >
-              Показать результат
-            </button>
-          </div>
-        </div>
-      )}
+    document.getElementById('catImage').src = catImage;
+    document.getElementById('catText').textContent = catText;
+  });
 
-      {/* STEP 4: Final result */}
-      {step === 4 && (
-        <div className="result-container active">
-          {catImage && <img src={catImage} alt="Result Cat" />}
-          <div className="cat-desc">
-            <p>Ваш итоговый счёт: {finalPoints}</p>
-            <p>{catText}</p>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+  updateStep();
 </script>
 
 </body>
