@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Which Cat Are You?</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="root"></div>
+    <form id="questionnaire">
+        <div class="input-group">
+            <label class="checkbox">
+                <input class="checkbox__input" type="checkbox" name="personality" value="милый" />
+                <span class="checkbox__label">милый</span>
+            </label>
+            <label class="checkbox">
+                <input class="checkbox__input" type="checkbox" name="personality" value="добрый" />
+                <span class="checkbox__label">добрый</span>
+            </label>
+            <label class="checkbox">
+                <input class="checkbox__input" type="checkbox" name="personality" value="обаятельный" />
+                <span class="checkbox__label">обаятельный</span>
+            </label>
+        </div>
+        <div class="input-group">
+            <label class="radio">
+                <input class="radio__input" type="radio" name="type" value="кисочка" />
+                <span class="radio__label">кисочка</span>
+            </label>
+            <label class="radio">
+                <input class="radio__input" type="radio" name="type" value="чьмо" />
+                <span class="radio__label">чьмо</span>
+            </label>
+            <label class="radio">
+                <input class="radio__input" type="radio" name="type" value="посмотрим" />
+                <span class="radio__label">посмотрим</span>
+            </label>
+        </div>
+    </form>
+    <div class="wrapper">
+        <div class="wheel-frame pix">
+            <div class="wheel">
+                <div class="wheel-support pix"></div>
+                <div class="hamster puff pix">
+                    <div class="ear pix"></div>
+                    <div class="head puff pix"></div>
+                    <div class="bum puff pix"></div>
+                </div>
+            </div>
+        </div>
+        <input type="range" name="speed" min="0" max="11" value="3">
+    </div>
+    <div class="sign">
+        by masahito / <a href="http://www.ma5a.com/">ma5a.com</a>
+    </div>
+    <div id="result">
+        <img id="result-image" src="" alt="Cat Image">
+        <p id="result-description"></p>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
